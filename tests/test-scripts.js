@@ -129,6 +129,49 @@ function testRemoveOverridesScript() {
   cleanupTempDir();
 }
 
+function testGenerateSummaryScript() {
+  console.log('\n=== Testing generate-summary.js ===');
+  
+  setupTempDir();
+  
+  // Initialize a git repo for testing
+  execSync('git init');
+  execSync('git config user.name "Test User"');
+  execSync('git config user.email "test@example.com"');
+  
+  // Create test data files
+  fs.writeFileSync('removed-overrides.json', JSON.stringify({
+    packageJson: { 'lodash': '^4.17.21', 'axios': '^1.0.0' },
+    workspace: { 'react': '^18.0.0' }
+  }));
+  
+  // Create some changes to test git diff
+  fs.writeFileSync('package.json', '{"name": "test"}');
+  execSync('git add .');
+  execSync('git commit -m "Initial"');
+  fs.writeFileSync('package.json', '{"name": "test-modified"}');
+  
+  // Run the generate summary script
+  execSync(`node ${path.join(scriptsDir, 'generate-summary.js')}`);
+  
+  // Check that the summary file was created
+  assertTrue(fs.existsSync('override-removal-summary.md'), 'Should create summary file');
+  
+  const summaryContent = fs.readFileSync('override-removal-summary.md', 'utf8');
+  
+  // Verify content includes the expected sections
+  assertTrue(summaryContent.includes('# pnpm Overrides Removal Summary'), 'Should have main heading');
+  assertTrue(summaryContent.includes('## Removed Overrides'), 'Should have removed overrides section');
+  assertTrue(summaryContent.includes('### From package.json:'), 'Should list package.json overrides');
+  assertTrue(summaryContent.includes('### From pnpm-workspace.yaml:'), 'Should list workspace overrides');
+  assertTrue(summaryContent.includes('lodash'), 'Should mention lodash override');
+  assertTrue(summaryContent.includes('react'), 'Should mention react override');
+  assertTrue(summaryContent.includes('## Changed Files'), 'Should have changed files section');
+  assertTrue(summaryContent.includes('## Summary'), 'Should have summary section');
+  
+  cleanupTempDir();
+}
+
 function testIntegration() {
   console.log('\n=== Testing Integration ===');
   
@@ -168,6 +211,7 @@ function runTests() {
   
   try {
     testRemoveOverridesScript();
+    testGenerateSummaryScript();
     testIntegration();
     
     console.log('\n🎉 All tests passed!');
@@ -185,5 +229,6 @@ if (require.main === module) {
 module.exports = {
   runTests,
   testRemoveOverridesScript,
+  testGenerateSummaryScript,
   testIntegration
 };

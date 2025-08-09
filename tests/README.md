@@ -26,6 +26,7 @@ pnpm run test:action   # Test action.yml only
 # Development test runner (for debugging individual components)
 pnpm run test:dev action      # Test only action.yml structure
 pnpm run test:dev remove      # Test only remove-overrides.js
+pnpm run test:dev summary     # Test only generate-summary.js
 pnpm run test:dev integration # Test only integration workflow
 pnpm run test:dev help        # Show available options
 ```
@@ -34,6 +35,7 @@ pnpm run test:dev help        # Show available options
 
 ### Script Tests (`test-scripts.js`)
 - ✅ `remove-overrides.js` functionality for both package.json and pnpm-workspace.yaml
+- ✅ `generate-summary.js` functionality for creating detailed PR summaries
 - ✅ Integration workflow testing with git change detection
 - ✅ Error handling scenarios
 

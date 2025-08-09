@@ -52,21 +52,7 @@ runs:
       # Generate summary of changes for PR/comment
       - name: Generate change summary
         if: steps.changes.outputs.has_changes == 'true'
-        run: |
-          echo "# pnpm Overrides Removal Summary" > override-removal-summary.md
-          echo "" >> override-removal-summary.md
-          echo "The following changes occurred after removing pnpm overrides and running \`pnpm audit --fix\`:" >> override-removal-summary.md
-          echo "" >> override-removal-summary.md
-          echo "## Changed Files" >> override-removal-summary.md
-          git diff --name-only >> override-removal-summary.md
-          git diff --cached --name-only >> override-removal-summary.md
-          echo "" >> override-removal-summary.md
-          echo "## Summary" >> override-removal-summary.md
-          echo "- Removed overrides from configuration files" >> override-removal-summary.md
-          echo "- Ran \`pnpm install\` to update lockfile" >> override-removal-summary.md  
-          echo "- Ran \`pnpm audit --fix\` to apply available fixes" >> override-removal-summary.md
-          echo "" >> override-removal-summary.md
-          echo "This suggests that the overrides are no longer necessary as pnpm can now resolve dependencies and fix vulnerabilities without them." >> override-removal-summary.md
+        run: node ${{ github.action_path }}/scripts/generate-summary.js
         shell: bash
 
       # If on PR, post comment about changes
