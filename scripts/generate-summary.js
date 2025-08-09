@@ -17,7 +17,7 @@ function generateSummary() {
       if (Object.keys(removed.packageJson).length > 0) {
         summary += "### From package.json:\n\n";
         for (const [pkg, version] of Object.entries(removed.packageJson)) {
-          summary += `- \`${pkg}\`: \`${version}\`\n`;
+          summary += `- [\`${pkg}\`](https://npmjs.com/package/${pkg}): \`${version}\`\n`;
         }
         summary += "\n";
       }
@@ -25,7 +25,7 @@ function generateSummary() {
       if (Object.keys(removed.workspace).length > 0) {
         summary += "### From pnpm-workspace.yaml:\n\n";
         for (const [pkg, version] of Object.entries(removed.workspace)) {
-          summary += `- \`${pkg}\`: \`${version}\`\n`;
+          summary += `- [\`${pkg}\`](https://npmjs.com/package/${pkg}): \`${version}\`\n`;
         }
         summary += "\n";
       }
