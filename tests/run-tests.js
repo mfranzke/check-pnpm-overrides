@@ -20,7 +20,6 @@ async function runAllTests() {
     console.log('- ✓ Action YAML structure validation');
     console.log('- ✓ Script functionality tests');
     console.log('- ✓ Integration workflow tests');
-    console.log('- ✓ Error handling tests');
     
   } catch (error) {
     console.error('\n❌ Test suite failed:', error.message);

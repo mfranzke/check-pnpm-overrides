@@ -11,82 +11,94 @@ runs:
           pnpm install --prod
         shell: bash
         
-      # Audit WITH overrides
-      - name: Install dependencies (with overrides)
-        run: pnpm install
+      # Ensure we have git configured for commits
+      - name: Configure git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
         shell: bash
-      - name: Run pnpm audit (with overrides)
-        run: pnpm audit --json > audit-with.json || true
+        
+      # Save original state for comparison
+      - name: Save current state
+        run: |
+          git add .
+          git stash push -m "backup-before-override-removal" || true
         shell: bash
 
-      # Save original files
-      - name: Backup package.json and pnpm-workspace.yaml
+      # Remove overrides and let pnpm fix issues
+      - name: Remove overrides and fix with pnpm
         run: |
-          cp package.json package.json.bak
-          if [ -f pnpm-workspace.yaml ]; then
-            cp pnpm-workspace.yaml pnpm-workspace.yaml.bak
+          node ${{ github.action_path }}/scripts/remove-overrides.js
+          pnpm install
+          pnpm audit --fix || true
+        shell: bash
+
+      # Check if anything changed
+      - name: Check for changes
+        id: changes
+        run: |
+          if git diff --quiet && git diff --cached --quiet; then
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+            echo "No changes detected after removing overrides and running audit --fix"
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            echo "Changes detected after removing overrides and running audit --fix"
+            echo "Changed files:"
+            git diff --name-only
+            git diff --cached --name-only
           fi
         shell: bash
 
-      # Remove overrides
-      - name: Remove overrides
-        run: node ${{ github.action_path }}/scripts/remove-overrides.js
-        shell: bash
-
-      # Audit WITHOUT overrides
-      - name: Install dependencies (without overrides)
-        run: pnpm install --no-frozen-lockfile
-        shell: bash
-      - name: Run pnpm audit (without overrides)
-        run: pnpm audit --json > audit-without.json || true
-        shell: bash
-
-      # Compare audits
-      - name: Compare audit results
-        id: diff
-        run: node ${{ github.action_path }}/scripts/compare-audits.js
-        shell: bash
-
-      # Restore original files
-      - name: Restore original package.json and pnpm-workspace.yaml
+      # Generate summary of changes for PR/comment
+      - name: Generate change summary
+        if: steps.changes.outputs.has_changes == 'true'
         run: |
-          mv package.json.bak package.json
-          if [ -f pnpm-workspace.yaml.bak ]; then
-            mv pnpm-workspace.yaml.bak pnpm-workspace.yaml
-          fi
+          echo "# pnpm Overrides Removal Summary" > override-removal-summary.md
+          echo "" >> override-removal-summary.md
+          echo "The following changes occurred after removing pnpm overrides and running \`pnpm audit --fix\`:" >> override-removal-summary.md
+          echo "" >> override-removal-summary.md
+          echo "## Changed Files" >> override-removal-summary.md
+          git diff --name-only >> override-removal-summary.md
+          git diff --cached --name-only >> override-removal-summary.md
+          echo "" >> override-removal-summary.md
+          echo "## Summary" >> override-removal-summary.md
+          echo "- Removed overrides from configuration files" >> override-removal-summary.md
+          echo "- Ran \`pnpm install\` to update lockfile" >> override-removal-summary.md  
+          echo "- Ran \`pnpm audit --fix\` to apply available fixes" >> override-removal-summary.md
+          echo "" >> override-removal-summary.md
+          echo "This suggests that the overrides are no longer necessary as pnpm can now resolve dependencies and fix vulnerabilities without them." >> override-removal-summary.md
         shell: bash
 
-      # If on PR, post comment
+      # If on PR, post comment about changes
       - name: Comment on PR
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && steps.changes.outputs.has_changes == 'true'
         uses: actions/github-script@v7
         with:
           script: |
             const fs = require('node:fs');
-            const diffText = fs.readFileSync('audit-diff.txt', 'utf8');
+            const summary = fs.readFileSync('override-removal-summary.md', 'utf8');
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: `**pnpm overrides check**\n\n${diffText}`
+              body: summary
             })
 
-      # If on default branch (manual/scheduled), create PR if safe to remove overrides
-      - name: Remove overrides and update lockfile
-        if: steps.diff.outputs.can_remove_overrides == 'true' && github.event_name != 'pull_request'
-        run: |
-          node ${{ github.action_path }}/scripts/remove-overrides.js
-          pnpm install
-        shell: bash
-
-      - name: Commit and create PR
-        if: steps.diff.outputs.can_remove_overrides == 'true' && github.event_name != 'pull_request'
+      # If on default branch and changes detected, create PR
+      - name: Create PR for override removal
+        if: steps.changes.outputs.has_changes == 'true' && github.event_name != 'pull_request'
         uses: peter-evans/create-pull-request@v6
         with:
           commit-message: "chore: remove unnecessary pnpm overrides"
           title: "Remove unnecessary pnpm overrides"
-          body: |
-            This PR removes `pnpm` overrides that are no longer needed because vulnerabilities have been fixed upstream.
-            Please verify that everything installs and works as expected.
+          body-path: override-removal-summary.md
           branch: remove-unneeded-pnpm-overrides
           base: ${{ github.event.repository.default_branch }}
+
+      # If no changes, restore original state
+      - name: Restore original state if no changes
+        if: steps.changes.outputs.has_changes == 'false'
+        run: |
+          git stash pop || true
+          echo "No changes were needed - overrides are still necessary"
+        shell: bash

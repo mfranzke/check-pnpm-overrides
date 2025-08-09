@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 const { lintActionYmlStructure } = require('./lint-action-yml');
-const { testRemoveOverridesScript, testCompareAuditsScript, testIntegration } = require('./test-scripts');
+const { testRemoveOverridesScript, testIntegration } = require('./test-scripts');
 
 const testSuites = {
   'action': {
@@ -11,10 +11,6 @@ const testSuites = {
   'remove': {
     name: 'Remove Overrides Script',
     fn: testRemoveOverridesScript
-  },
-  'compare': {
-    name: 'Compare Audits Script', 
-    fn: testCompareAuditsScript
   },
   'integration': {
     name: 'Integration Tests',

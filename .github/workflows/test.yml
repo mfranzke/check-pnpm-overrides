@@ -32,7 +32,7 @@ jobs:
       run: |
         cat > package.json << 'EOF'
         {
-          "name": "test-project",
+          "name": "test-project", 
           "version": "1.0.0",
           "dependencies": {
             "lodash": "^4.17.20"
@@ -42,6 +42,8 @@ jobs:
           }
         }
         EOF
+        git add package.json
+        git commit -m "Add test project with overrides"
         
     - name: Test action locally
       id: test-action
@@ -51,7 +53,9 @@ jobs:
     - name: Verify action ran
       run: |
         echo "Action completed with exit code: ${{ steps.test-action.outcome }}"
-        if [ -f audit-diff.txt ]; then
-          echo "Action produced output file:"
-          cat audit-diff.txt
+        if [ -f override-removal-summary.md ]; then
+          echo "Action produced summary:"
+          cat override-removal-summary.md
         fi
+        echo "Git status after action:"
+        git status --porcelain || true

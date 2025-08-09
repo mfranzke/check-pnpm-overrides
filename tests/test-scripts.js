@@ -129,115 +129,25 @@ function testRemoveOverridesScript() {
   cleanupTempDir();
 }
 
-function testCompareAuditsScript() {
-  console.log('\n=== Testing compare-audits.js ===');
-  
-  setupTempDir();
-  
-  // Mock GITHUB_OUTPUT
-  const outputFile = path.join(tempDir, 'github_output');
-  process.env.GITHUB_OUTPUT = outputFile;
-  
-  // Test 1: Overrides fix vulnerabilities (should recommend removal)
-  fs.copyFileSync(
-    path.join(fixturesDir, 'audit-with-vulnerabilities.json'),
-    'audit-with.json'
-  );
-  fs.copyFileSync(
-    path.join(fixturesDir, 'audit-clean.json'),
-    'audit-without.json'
-  );
-  
-  execSync(`node ${path.join(scriptsDir, 'compare-audits.js')}`);
-  
-  const output1 = fs.readFileSync(outputFile, 'utf8');
-  assertTrue(output1.includes('can_remove_overrides=true'), 'Should recommend removing overrides when they fix issues');
-  
-  const diffContent1 = fs.readFileSync('audit-diff.txt', 'utf8');
-  assertTrue(diffContent1.includes('lodash@<4.17.21'), 'Should show removed vulnerabilities');
-  
-  // Test 2: Overrides don't help (should not recommend removal)
-  fs.writeFileSync(outputFile, ''); // Clear output file
-  fs.copyFileSync(
-    path.join(fixturesDir, 'audit-with-vulnerabilities.json'),
-    'audit-with.json'
-  );
-  fs.copyFileSync(
-    path.join(fixturesDir, 'audit-with-vulnerabilities.json'),
-    'audit-without.json'
-  );
-  
-  execSync(`node ${path.join(scriptsDir, 'compare-audits.js')}`);
-  
-  const output2 = fs.readFileSync(outputFile, 'utf8');
-  assertTrue(output2.includes('can_remove_overrides=false'), 'Should not recommend removing overrides when they don\'t help');
-  
-  // Test 3: Both audits are clean
-  fs.writeFileSync(outputFile, ''); // Clear output file
-  fs.copyFileSync(
-    path.join(fixturesDir, 'audit-clean.json'),
-    'audit-with.json'
-  );
-  fs.copyFileSync(
-    path.join(fixturesDir, 'audit-clean.json'),
-    'audit-without.json'
-  );
-  
-  execSync(`node ${path.join(scriptsDir, 'compare-audits.js')}`);
-  
-  const output3 = fs.readFileSync(outputFile, 'utf8');
-  assertTrue(output3.includes('can_remove_overrides=false'), 'Should not recommend removing overrides when no issues exist');
-  
-  // Test 4: Handle missing/malformed files
-  fs.writeFileSync(outputFile, ''); // Clear output file
-  fs.writeFileSync('audit-with.json', 'invalid json');
-  fs.writeFileSync('audit-without.json', '{}');
-  
-  execSync(`node ${path.join(scriptsDir, 'compare-audits.js')}`);
-  
-  const output4 = fs.readFileSync(outputFile, 'utf8');
-  assertTrue(output4.includes('can_remove_overrides=false'), 'Should handle malformed JSON gracefully');
-  
-  cleanupTempDir();
-}
-
 function testIntegration() {
   console.log('\n=== Testing Integration ===');
   
   setupTempDir();
+  
+  // Initialize a git repo for testing
+  execSync('git init');
+  execSync('git config user.name "Test User"');
+  execSync('git config user.email "test@example.com"');
   
   // Test full workflow
   fs.copyFileSync(
     path.join(fixturesDir, 'package-with-overrides.json'),
     'package.json'
   );
-  fs.copyFileSync(
-    path.join(fixturesDir, 'package-with-overrides.json'),
-    'package.json.bak'
-  );
   
-  // Mock GITHUB_OUTPUT
-  const outputFile = path.join(tempDir, 'github_output');
-  process.env.GITHUB_OUTPUT = outputFile;
-  
-  // Simulate audit results that show overrides are no longer needed
-  // WITH overrides: still has the old vulnerabilities that overrides were meant to fix
-  // WITHOUT overrides: those vulnerabilities are now fixed upstream, so clean
-  fs.copyFileSync(
-    path.join(fixturesDir, 'audit-with-vulnerabilities.json'),
-    'audit-with.json'
-  );
-  fs.copyFileSync(
-    path.join(fixturesDir, 'audit-clean.json'), 
-    'audit-without.json'
-  );
-  
-  // Run compare script
-  execSync(`node ${path.join(scriptsDir, 'compare-audits.js')}`);
-  
-  // Verify output
-  const output = fs.readFileSync(outputFile, 'utf8');
-  assertTrue(output.includes('can_remove_overrides=true'), 'Integration: Should detect overrides are beneficial for removal');
+  // Add initial commit
+  execSync('git add .');
+  execSync('git commit -m "Initial commit"');
   
   // Run remove overrides script
   execSync(`node ${path.join(scriptsDir, 'remove-overrides.js')}`);
@@ -245,11 +155,9 @@ function testIntegration() {
   const finalPackage = JSON.parse(fs.readFileSync('package.json', 'utf8'));
   assertTrue(!finalPackage.hasOwnProperty('overrides'), 'Integration: Should successfully remove overrides');
   
-  // Restore from backup
-  execSync('mv package.json.bak package.json');
-  
-  const restoredPackage = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-  assertTrue(restoredPackage.hasOwnProperty('overrides'), 'Integration: Should restore from backup');
+  // Check if git detects changes
+  const gitStatus = execSync('git status --porcelain').toString();
+  assertTrue(gitStatus.includes('package.json'), 'Integration: Git should detect changes to package.json');
   
   cleanupTempDir();
 }
@@ -260,7 +168,6 @@ function runTests() {
   
   try {
     testRemoveOverridesScript();
-    testCompareAuditsScript();
     testIntegration();
     
     console.log('\n🎉 All tests passed!');
@@ -278,6 +185,5 @@ if (require.main === module) {
 module.exports = {
   runTests,
   testRemoveOverridesScript,
-  testCompareAuditsScript,
   testIntegration
 };

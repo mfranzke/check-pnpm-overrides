@@ -7,6 +7,7 @@ This directory contains comprehensive tests for the GitHub Action.
 - `test-scripts.js` - Tests individual JavaScript scripts
 - `test-action-yml.js` - Validates action.yml structure  
 - `run-tests.js` - Main test runner
+- `test-runner.js` - Development test runner for individual components
 - `fixtures/` - Test data files
 
 ## Running Tests
@@ -25,7 +26,6 @@ pnpm run test:action   # Test action.yml only
 # Development test runner (for debugging individual components)
 pnpm run test:dev action      # Test only action.yml structure
 pnpm run test:dev remove      # Test only remove-overrides.js
-pnpm run test:dev compare     # Test only compare-audits.js  
 pnpm run test:dev integration # Test only integration workflow
 pnpm run test:dev help        # Show available options
 ```
@@ -33,9 +33,8 @@ pnpm run test:dev help        # Show available options
 ## Test Coverage
 
 ### Script Tests (`test-scripts.js`)
-- ✅ `remove-overrides.js` functionality
-- ✅ `compare-audits.js` functionality  
-- ✅ Integration workflow testing
+- ✅ `remove-overrides.js` functionality for both package.json and pnpm-workspace.yaml
+- ✅ Integration workflow testing with git change detection
 - ✅ Error handling scenarios
 
 ### Action YAML Tests (`test-action-yml.js`)
