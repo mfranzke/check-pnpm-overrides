@@ -29,7 +29,7 @@ runs:
       - name: Remove overrides and fix with pnpm
         run: |
           node ${{ github.action_path }}/scripts/remove-overrides.js
-          pnpm install
+          pnpm install --no-frozen-lockfile
           pnpm audit --fix || true
         shell: bash
 
