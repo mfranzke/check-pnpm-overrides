@@ -17,12 +17,17 @@ This action helps you check without manually editing files.
 
 ## Usage
 
-### Manual Run
-
 ```yaml
 name: Check pnpm Overrides
+
 on:
-  workflow_dispatch:
+  workflow_dispatch: # manual run
+  schedule:
+    - cron: "0 3 * * 0" # weekly
+
+permissions:
+  contents: write
+  pull-requests: write
 
 jobs:
   check-overrides:
@@ -35,8 +40,6 @@ jobs:
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 10
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -44,4 +47,5 @@ jobs:
           node-version-file: ".nvmrc"
           cache: "pnpm"
 
-      - uses: mfranzke/check-pnpm-overrides@v1
+      - uses: mfranzke/check-pnpm-overrides@main
+```
