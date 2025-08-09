@@ -2,6 +2,28 @@
 
 const fs = require('node:fs');
 
+// Extract package name from override key, handling scoped packages and version specifiers
+function extractPackageName(overrideKey) {
+  // Handle scoped packages like @types/node, @babel/core, etc.
+  if (overrideKey.startsWith('@')) {
+    // Find the second @ which would indicate a version specifier
+    const parts = overrideKey.split('@');
+    if (parts.length === 2) {
+      // Only scope and package name, no version (e.g., "@types/node")
+      return overrideKey;
+    } else if (parts.length >= 3) {
+      // Scope, package name, and version (e.g., "@types/node@18.0.0")
+      return `@${parts[1]}`;
+    }
+  } else {
+    // Non-scoped packages - split on @ and take the first part
+    return overrideKey.split('@')[0];
+  }
+  
+  // Fallback - return the original key
+  return overrideKey;
+}
+
 // Generate markdown summary of override removal
 function generateSummary() {
   let summary = "# pnpm Overrides Removal Summary\n\n";
@@ -23,7 +45,7 @@ function generateSummary() {
         if (Object.keys(data).length > 0) {
           summary += `### ${title}\n\n`;
           for (const [pkg, version] of Object.entries(data)) {
-            summary += `- [\`${pkg}\`](https://npmjs.com/package/${pkg}): \`${version}\`\n`;
+            summary += `- [\`${pkg}\`](https://npmjs.com/package/${encodeURIComponent(extractPackageName(pkg))}): \`${version}\`\n`;
           }
           summary += "\n";
         }

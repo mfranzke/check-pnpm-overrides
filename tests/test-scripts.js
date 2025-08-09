@@ -139,10 +139,17 @@ function testGenerateSummaryScript() {
   execSync('git config user.name "Test User"');
   execSync('git config user.email "test@example.com"');
   
-  // Create test data files
+  // Create test data files with various package name formats
   fs.writeFileSync('removed-overrides.json', JSON.stringify({
-    packageJson: { 'lodash': '^4.17.21', 'axios': '^1.0.0' },
-    workspace: { 'react': '^18.0.0' }
+    packageJson: { 
+      'lodash': '^4.17.21', 
+      '@types/node': '^18.0.0',
+      '@babel/core@7.20.0': '^7.21.0'
+    },
+    workspace: { 
+      'react': '^18.0.0',
+      '@vue/cli': '^5.0.0'
+    }
   }));
   
   // Create some changes to test git diff
@@ -165,7 +172,12 @@ function testGenerateSummaryScript() {
   assertTrue(summaryContent.includes('### From package.json:'), 'Should list package.json overrides');
   assertTrue(summaryContent.includes('### From pnpm-workspace.yaml:'), 'Should list workspace overrides');
   assertTrue(summaryContent.includes('lodash'), 'Should mention lodash override');
+  assertTrue(summaryContent.includes('@types/node'), 'Should mention @types/node override');
+  assertTrue(summaryContent.includes('@babel/core'), 'Should mention @babel/core override');
   assertTrue(summaryContent.includes('react'), 'Should mention react override');
+  assertTrue(summaryContent.includes('@vue/cli'), 'Should mention @vue/cli override');
+  assertTrue(summaryContent.includes('https://npmjs.com/package/lodash'), 'Should link to lodash package');
+  assertTrue(summaryContent.includes('https://npmjs.com/package/%40types%2Fnode'), 'Should link to @types/node package with proper encoding');
   assertTrue(summaryContent.includes('## Changed Files'), 'Should have changed files section');
   assertTrue(summaryContent.includes('## Summary'), 'Should have summary section');
   
