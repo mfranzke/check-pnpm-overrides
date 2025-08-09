@@ -88,6 +88,8 @@ runs:
       - name: Create PR for override removal
         if: steps.changes.outputs.has_changes == 'true' && github.event_name != 'pull_request'
         uses: peter-evans/create-pull-request@v6
+        env:
+          HUSKY: 0 # Disable Husky to avoid pre-commit hooks
         with:
           commit-message: "chore: remove unnecessary pnpm overrides"
           title: "Remove unnecessary pnpm overrides"

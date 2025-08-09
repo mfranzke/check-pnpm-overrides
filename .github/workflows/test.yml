@@ -29,6 +29,8 @@ jobs:
       run: pnpm test
       
     - name: Create test project with overrides
+      env:
+        HUSKY: 0 # Disable Husky to avoid pre-commit hooks
       run: |
         cat > package.json << 'EOF'
         {
