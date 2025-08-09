@@ -96,6 +96,10 @@ runs:
           body-path: override-removal-summary.md
           branch: remove-unneeded-pnpm-overrides
           base: ${{ github.event.repository.default_branch }}
+          add-paths: |
+            package.json
+            pnpm-workspace.yaml
+            pnpm-lock.yaml
 
       # If no changes, restore original state
       - name: Restore original state if no changes
