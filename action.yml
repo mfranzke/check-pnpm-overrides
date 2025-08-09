@@ -1,0 +1,130 @@
+name: "Check pnpm Overrides"
+description: "Checks whether pnpm overrides are still necessary by running audit without them."
+author: "Maximilian Franzke"
+runs:
+  using: "composite"
+  steps:
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      # Audit WITH overrides
+      - name: Install dependencies (with overrides)
+        run: pnpm install
+      - name: Run pnpm audit (with overrides)
+        run: pnpm audit --json > audit-with.json || true
+
+      # Save original package.json
+      - name: Backup package.json
+        run: cp package.json package.json.bak
+
+      # Remove overrides
+      - name: Remove overrides
+        run: |
+          node -e "
+          const fs = require('node:fs');
+          const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+          if (pkg.overrides) {
+            delete pkg.overrides;
+            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));
+          }
+          "
+
+      # Audit WITHOUT overrides
+      - name: Install dependencies (without overrides)
+        run: pnpm install
+      - name: Run pnpm audit (without overrides)
+        run: pnpm audit --json > audit-without.json || true
+
+      # Compare audits
+      - name: Compare audit results
+        id: diff
+        run: |
+          node <<'EOF'
+          const fs = require('node:fs');
+
+          function readAudit(path) {
+            try {
+              return JSON.parse(fs.readFileSync(path, 'utf8'));
+            } catch (e) {
+              return {};
+            }
+          }
+
+          const withOverrides = readAudit('audit-with.json');
+          const withoutOverrides = readAudit('audit-without.json');
+
+          function summarize(audit) {
+            return audit.advisories
+              ? Object.values(audit.advisories).map(a => `${a.module_name}@${a.vulnerable_versions}`).sort()
+              : [];
+          }
+
+          const sumWith = summarize(withOverrides);
+          const sumWithout = summarize(withoutOverrides);
+
+          const removedIssues = sumWith.filter(x => !sumWithout.includes(x));
+          const newIssues = sumWithout.filter(x => !sumWith.includes(x));
+
+          fs.writeFileSync('audit-diff.txt', [
+            '=== Removed Issues (now fixed upstream) ===',
+            ...removedIssues,
+            '',
+            '=== New Issues (appear without overrides) ===',
+            ...newIssues
+          ].join('\n'));
+
+          console.log(fs.readFileSync('audit-diff.txt', 'utf8'));
+
+          if (removedIssues.length > 0 && newIssues.length === 0) {
+            console.log('::set-output name=can_remove_overrides::true');
+          } else {
+            console.log('::set-output name=can_remove_overrides::false');
+          }
+          EOF
+
+      # Restore original package.json
+      - name: Restore original package.json
+        run: mv package.json.bak package.json
+
+      # If on PR, post comment
+      - name: Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('node:fs');
+            const diffText = fs.readFileSync('audit-diff.txt', 'utf8');
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `**pnpm overrides check**\n\n${diffText}`
+            })
+
+      # If on default branch (manual/scheduled), create PR if safe to remove overrides
+      - name: Remove overrides and update lockfile
+        if: steps.diff.outputs.can_remove_overrides == 'true' && github.event_name != 'pull_request'
+        run: |
+          node -e "
+          const fs = require('node:fs');
+          const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+          if (pkg.overrides) {
+            delete pkg.overrides;
+            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));
+          }
+          "
+          pnpm install
+
+      - name: Commit and create PR
+        if: steps.diff.outputs.can_remove_overrides == 'true' && github.event_name != 'pull_request'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: "chore: remove unnecessary pnpm overrides"
+          title: "Remove unnecessary pnpm overrides"
+          body: |
+            This PR removes `pnpm` overrides that are no longer needed because vulnerabilities have been fixed upstream.
+            Please verify that everything installs and works as expected.
+          branch: remove-unneeded-pnpm-overrides
+          base: ${{ github.event.repository.default_branch }}
