@@ -26,8 +26,8 @@ on:
     - cron: "0 3 * * 0" # weekly
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: write      # Required to commit changes and create branches
+  pull-requests: write # Required to create pull requests
 
 jobs:
   check-overrides:
@@ -49,3 +49,29 @@ jobs:
 
       - uses: mfranzke/check-pnpm-overrides@main
 ```
+
+## Permissions
+
+This action requires the following permissions to function properly:
+
+- `contents: write` - To create commits and branches
+- `pull-requests: write` - To create pull requests
+
+If you encounter the error "GitHub Actions is not permitted to create or approve pull requests", ensure your workflow has the correct permissions as shown in the usage example above.
+
+## Troubleshooting
+
+### "GitHub Actions is not permitted to create or approve pull requests"
+
+This error occurs when the workflow doesn't have the necessary permissions. Add the following to your workflow file:
+
+```yaml
+permissions:
+  contents: write
+  pull-requests: write
+```
+
+### Actions Settings
+
+Additionally check for the repositories settings within actions / general (`/settings/actions`):
+The setting "Allow GitHub Actions to create and approve pull requests" must be activated.
