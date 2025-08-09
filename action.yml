@@ -4,20 +4,18 @@ author: "Maximilian Franzke"
 runs:
   using: "composite"
   steps:
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10
-
       # Audit WITH overrides
       - name: Install dependencies (with overrides)
         run: pnpm install
+        shell: bash
       - name: Run pnpm audit (with overrides)
         run: pnpm audit --json > audit-with.json || true
+        shell: bash
 
       # Save original package.json
       - name: Backup package.json
         run: cp package.json package.json.bak
+        shell: bash
 
       # Remove overrides
       - name: Remove overrides
@@ -30,12 +28,15 @@ runs:
             fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));
           }
           "
+        shell: bash
 
       # Audit WITHOUT overrides
       - name: Install dependencies (without overrides)
         run: pnpm install
+        shell: bash
       - name: Run pnpm audit (without overrides)
         run: pnpm audit --json > audit-without.json || true
+        shell: bash
 
       # Compare audits
       - name: Compare audit results
@@ -83,10 +84,12 @@ runs:
             console.log('::set-output name=can_remove_overrides::false');
           }
           EOF
+        shell: bash
 
       # Restore original package.json
       - name: Restore original package.json
         run: mv package.json.bak package.json
+        shell: bash
 
       # If on PR, post comment
       - name: Comment on PR
@@ -116,6 +119,7 @@ runs:
           }
           "
           pnpm install
+        shell: bash
 
       - name: Commit and create PR
         if: steps.diff.outputs.can_remove_overrides == 'true' && github.event_name != 'pull_request'
