@@ -61,7 +61,7 @@ function testRemoveOverridesScript() {
   execSync(`node ${path.join(scriptsDir, 'remove-overrides.js')}`);
   
   const result = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-  assertTrue(!result.hasOwnProperty('overrides'), 'Should remove overrides property');
+  assertTrue(!result.hasOwnProperty('overrides'), 'Should remove overrides property from package.json');
   assertEquals(result.name, 'test-project', 'Should preserve other properties');
   
   // Test 2: Handle package.json without overrides gracefully
@@ -75,6 +75,56 @@ function testRemoveOverridesScript() {
   const result2 = JSON.parse(fs.readFileSync('package.json', 'utf8'));
   assertTrue(!result2.hasOwnProperty('overrides'), 'Should handle missing overrides gracefully');
   assertEquals(result2.name, 'test-project', 'Should preserve other properties');
+  
+  // Test 3: Remove overrides from pnpm-workspace.yaml with overrides
+  fs.copyFileSync(
+    path.join(fixturesDir, 'package-without-overrides.json'),
+    'package.json'
+  );
+  fs.copyFileSync(
+    path.join(fixturesDir, 'pnpm-workspace-with-overrides.yaml'),
+    'pnpm-workspace.yaml'
+  );
+  
+  execSync(`node ${path.join(scriptsDir, 'remove-overrides.js')}`);
+  
+  const workspaceContent = fs.readFileSync('pnpm-workspace.yaml', 'utf8');
+  const yaml = require('js-yaml');
+  const workspace = yaml.load(workspaceContent);
+  assertTrue(!workspace.hasOwnProperty('overrides'), 'Should remove overrides property from pnpm-workspace.yaml');
+  assertTrue(Array.isArray(workspace.packages), 'Should preserve packages array');
+  
+  // Test 4: Handle pnpm-workspace.yaml without overrides
+  fs.copyFileSync(
+    path.join(fixturesDir, 'pnpm-workspace-without-overrides.yaml'),
+    'pnpm-workspace.yaml'
+  );
+  
+  execSync(`node ${path.join(scriptsDir, 'remove-overrides.js')}`);
+  
+  const workspaceContent2 = fs.readFileSync('pnpm-workspace.yaml', 'utf8');
+  const workspace2 = yaml.load(workspaceContent2);
+  assertTrue(!workspace2.hasOwnProperty('overrides'), 'Should handle missing overrides in workspace gracefully');
+  assertTrue(Array.isArray(workspace2.packages), 'Should preserve packages array');
+  
+  // Test 5: Handle both files with overrides
+  fs.copyFileSync(
+    path.join(fixturesDir, 'package-with-overrides.json'),
+    'package.json'
+  );
+  fs.copyFileSync(
+    path.join(fixturesDir, 'pnpm-workspace-with-overrides.yaml'),
+    'pnpm-workspace.yaml'
+  );
+  
+  execSync(`node ${path.join(scriptsDir, 'remove-overrides.js')}`);
+  
+  const result5 = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+  const workspaceContent5 = fs.readFileSync('pnpm-workspace.yaml', 'utf8');
+  const workspace5 = yaml.load(workspaceContent5);
+  
+  assertTrue(!result5.hasOwnProperty('overrides'), 'Should remove overrides from both package.json');
+  assertTrue(!workspace5.hasOwnProperty('overrides'), 'Should remove overrides from both pnpm-workspace.yaml');
   
   cleanupTempDir();
 }

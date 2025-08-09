@@ -9,8 +9,10 @@
     "test:action": "node tests/test-action-yml.js",
     "test:dev": "node tests/test-runner.js"
   },
-  "devDependencies": {
+  "dependencies": {
     "js-yaml": "^4.1.0"
+  },
+  "devDependencies": {
   },
   "packageManager": "pnpm@10.14.0"
 }

@@ -4,6 +4,13 @@ author: "Maximilian Franzke"
 runs:
   using: "composite"
   steps:
+      # Install action dependencies
+      - name: Install action dependencies
+        run: |
+          cd ${{ github.action_path }}
+          pnpm install --prod
+        shell: bash
+        
       # Audit WITH overrides
       - name: Install dependencies (with overrides)
         run: pnpm install
@@ -12,9 +19,13 @@ runs:
         run: pnpm audit --json > audit-with.json || true
         shell: bash
 
-      # Save original package.json
-      - name: Backup package.json
-        run: cp package.json package.json.bak
+      # Save original files
+      - name: Backup package.json and pnpm-workspace.yaml
+        run: |
+          cp package.json package.json.bak
+          if [ -f pnpm-workspace.yaml ]; then
+            cp pnpm-workspace.yaml pnpm-workspace.yaml.bak
+          fi
         shell: bash
 
       # Remove overrides
@@ -36,9 +47,13 @@ runs:
         run: node ${{ github.action_path }}/scripts/compare-audits.js
         shell: bash
 
-      # Restore original package.json
-      - name: Restore original package.json
-        run: mv package.json.bak package.json
+      # Restore original files
+      - name: Restore original package.json and pnpm-workspace.yaml
+        run: |
+          mv package.json.bak package.json
+          if [ -f pnpm-workspace.yaml.bak ]; then
+            mv pnpm-workspace.yaml.bak pnpm-workspace.yaml
+          fi
         shell: bash
 
       # If on PR, post comment
