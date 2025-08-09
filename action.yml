@@ -19,15 +19,7 @@ runs:
 
       # Remove overrides
       - name: Remove overrides
-        run: |
-          node -e "
-          const fs = require('node:fs');
-          const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-          if (pkg.overrides) {
-            delete pkg.overrides;
-            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));
-          }
-          "
+        run: node ${{ github.action_path }}/scripts/remove-overrides.js
         shell: bash
 
       # Audit WITHOUT overrides
@@ -41,49 +33,7 @@ runs:
       # Compare audits
       - name: Compare audit results
         id: diff
-        run: |
-          node <<'EOF'
-          const fs = require('node:fs');
-
-          function readAudit(path) {
-            try {
-              return JSON.parse(fs.readFileSync(path, 'utf8'));
-            } catch (e) {
-              return {};
-            }
-          }
-
-          const withOverrides = readAudit('audit-with.json');
-          const withoutOverrides = readAudit('audit-without.json');
-
-          function summarize(audit) {
-            return audit.advisories
-              ? Object.values(audit.advisories).map(a => `${a.module_name}@${a.vulnerable_versions}`).sort()
-              : [];
-          }
-
-          const sumWith = summarize(withOverrides);
-          const sumWithout = summarize(withoutOverrides);
-
-          const removedIssues = sumWith.filter(x => !sumWithout.includes(x));
-          const newIssues = sumWithout.filter(x => !sumWith.includes(x));
-
-          fs.writeFileSync('audit-diff.txt', [
-            '=== Removed Issues (now fixed upstream) ===',
-            ...removedIssues,
-            '',
-            '=== New Issues (appear without overrides) ===',
-            ...newIssues
-          ].join('\n'));
-
-          console.log(fs.readFileSync('audit-diff.txt', 'utf8'));
-
-          if (removedIssues.length > 0 && newIssues.length === 0) {
-            fs.appendFileSync(process.env.GITHUB_OUTPUT, 'can_remove_overrides=true\n');
-          } else {
-            fs.appendFileSync(process.env.GITHUB_OUTPUT, 'can_remove_overrides=false\n');
-          }
-          EOF
+        run: node ${{ github.action_path }}/scripts/compare-audits.js
         shell: bash
 
       # Restore original package.json
@@ -110,14 +60,7 @@ runs:
       - name: Remove overrides and update lockfile
         if: steps.diff.outputs.can_remove_overrides == 'true' && github.event_name != 'pull_request'
         run: |
-          node -e "
-          const fs = require('node:fs');
-          const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-          if (pkg.overrides) {
-            delete pkg.overrides;
-            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));
-          }
-          "
+          node ${{ github.action_path }}/scripts/remove-overrides.js
           pnpm install
         shell: bash
 
