@@ -35,7 +35,7 @@ runs:
 
       # Audit WITHOUT overrides
       - name: Install dependencies (without overrides)
-        run: pnpm install
+        run: pnpm install --no-frozen-lockfile
         shell: bash
       - name: Run pnpm audit (without overrides)
         run: pnpm audit --json > audit-without.json || true
