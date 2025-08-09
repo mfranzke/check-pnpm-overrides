@@ -79,9 +79,9 @@ runs:
           console.log(fs.readFileSync('audit-diff.txt', 'utf8'));
 
           if (removedIssues.length > 0 && newIssues.length === 0) {
-            console.log('::set-output name=can_remove_overrides::true');
+            fs.appendFileSync(process.env.GITHUB_OUTPUT, 'can_remove_overrides=true\n');
           } else {
-            console.log('::set-output name=can_remove_overrides::false');
+            fs.appendFileSync(process.env.GITHUB_OUTPUT, 'can_remove_overrides=false\n');
           }
           EOF
         shell: bash
