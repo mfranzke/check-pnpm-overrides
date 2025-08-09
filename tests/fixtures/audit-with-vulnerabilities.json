@@ -1,0 +1,10 @@
+{
+  "advisories": {
+    "1": {
+      "module_name": "lodash",
+      "vulnerable_versions": "<4.17.21",
+      "severity": "high",
+      "title": "Prototype Pollution"
+    }
+  }
+}

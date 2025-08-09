@@ -1,0 +1,16 @@
+{
+  "name": "check-pnpm-overrides-tests",
+  "version": "1.0.0",
+  "description": "Tests for the check-pnpm-overrides GitHub Action",
+  "private": true,
+  "scripts": {
+    "test": "node tests/run-tests.js",
+    "test:scripts": "node tests/test-scripts.js",
+    "test:action": "node tests/test-action-yml.js",
+    "test:dev": "node tests/test-runner.js"
+  },
+  "devDependencies": {
+    "js-yaml": "^4.1.0"
+  },
+  "packageManager": "pnpm@10.14.0"
+}

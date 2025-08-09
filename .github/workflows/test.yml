@@ -1,0 +1,59 @@
+name: Test Action
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version-file: ".nvmrc"
+        
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v4
+      with:
+        version: 10
+        
+    - name: Install dependencies
+      run: pnpm install
+      
+    - name: Run tests
+      run: pnpm test
+      
+    - name: Create test project with overrides
+      run: |
+        cat > package.json << 'EOF'
+        {
+          "name": "test-project",
+          "version": "1.0.0",
+          "dependencies": {
+            "lodash": "^4.17.20"
+          },
+          "overrides": {
+            "lodash": "^4.17.21"
+          }
+        }
+        EOF
+        
+    - name: Test action locally
+      id: test-action
+      uses: ./
+      continue-on-error: true
+      
+    - name: Verify action ran
+      run: |
+        echo "Action completed with exit code: ${{ steps.test-action.outcome }}"
+        if [ -f audit-diff.txt ]; then
+          echo "Action produced output file:"
+          cat audit-diff.txt
+        fi
