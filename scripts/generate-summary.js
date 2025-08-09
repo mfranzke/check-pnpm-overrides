@@ -14,20 +14,19 @@ function generateSummary() {
     if (Object.keys(removed.packageJson).length > 0 || Object.keys(removed.workspace).length > 0) {
       summary += "## Removed Overrides\n\n";
       
-      if (Object.keys(removed.packageJson).length > 0) {
-        summary += "### From package.json:\n\n";
-        for (const [pkg, version] of Object.entries(removed.packageJson)) {
-          summary += `- [\`${pkg}\`](https://npmjs.com/package/${pkg}): \`${version}\`\n`;
-        }
-        summary += "\n";
-      }
+      const sections = [
+        { title: 'From package.json:', data: removed.packageJson },
+        { title: 'From pnpm-workspace.yaml:', data: removed.workspace }
+      ];
       
-      if (Object.keys(removed.workspace).length > 0) {
-        summary += "### From pnpm-workspace.yaml:\n\n";
-        for (const [pkg, version] of Object.entries(removed.workspace)) {
-          summary += `- [\`${pkg}\`](https://npmjs.com/package/${pkg}): \`${version}\`\n`;
+      for (const { title, data } of sections) {
+        if (Object.keys(data).length > 0) {
+          summary += `### ${title}\n\n`;
+          for (const [pkg, version] of Object.entries(data)) {
+            summary += `- [\`${pkg}\`](https://npmjs.com/package/${pkg}): \`${version}\`\n`;
+          }
+          summary += "\n";
         }
-        summary += "\n";
       }
     }
   }
