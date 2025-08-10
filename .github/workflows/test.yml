@@ -34,18 +34,15 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          cat > package.json << 'EOF'
-          {
-            "name": "test-project",
-            "version": "1.0.0",
-            "dependencies": {
-              "lodash": "^4.17.20"
-            },
-            "overrides": {
-              "lodash": "^4.17.21"
-            }
-          }
-          EOF
+          # Add lodash dependency and override to existing package.json
+          node -e "
+            const fs = require('node:fs');
+            const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+            pkg.dependencies = pkg.dependencies || {};
+            pkg.dependencies.lodash = '^4.17.20';
+            pkg.overrides = { lodash: '^4.17.21' };
+            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));
+          "
           git add package.json
           git commit -m "Add test project with overrides"
 
