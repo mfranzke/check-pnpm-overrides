@@ -32,9 +32,11 @@ jobs:
         env:
           HUSKY: 0 # Disable Husky to avoid pre-commit hooks
         run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
           cat > package.json << 'EOF'
           {
-            "name": "test-project", 
+            "name": "test-project",
             "version": "1.0.0",
             "dependencies": {
               "lodash": "^4.17.20"
