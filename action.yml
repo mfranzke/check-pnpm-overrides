@@ -34,6 +34,7 @@ runs:
         node ${{ github.action_path }}/scripts/remove-overrides.cjs
         pnpm install --no-frozen-lockfile
         pnpm audit --fix || true
+        pnpm install --no-frozen-lockfile
       shell: bash
 
     # Check if anything changed
