@@ -1,5 +1,5 @@
 packages:
-  - 'packages/*'
+  - "packages/*"
 overrides:
-  lodash: '^4.17.21'
-  axios: '^1.0.0'
+  lodash: "^4.17.21"
+  axios: "^1.0.0"

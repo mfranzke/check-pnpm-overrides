@@ -1,18 +1,27 @@
 {
   "name": "check-pnpm-overrides-tests",
   "version": "1.0.0",
+  "type": "module",
   "description": "Tests for the check-pnpm-overrides GitHub Action",
   "private": true,
+  "packageManager": "pnpm@10.14.0",
   "scripts": {
-    "test": "node tests/run-tests.js",
-    "test:scripts": "node tests/test-scripts.js",
+    "prepare": "husky",
+    "test": "node tests/run-tests.cjs",
     "test:action": "node tests/test-action-yml.js",
-    "test:dev": "node tests/test-runner.js"
+    "test:dev": "node tests/test-runner.cjs",
+    "test:scripts": "node tests/test-scripts.cjs"
   },
   "dependencies": {
-    "js-yaml": "^4.1.0"
-  },
-  "devDependencies": {
-  },
-  "packageManager": "pnpm@10.14.0"
+    "@commitlint/cli": "^19.8.1",
+    "@commitlint/config-conventional": "^19.8.1",
+    "husky": "^9.1.7",
+    "js-yaml": "^4.1.0",
+    "lint-staged": "^16.1.5",
+    "markdownlint-cli": "^0.45.0",
+    "prettier": "^3.6.2",
+    "prettier-plugin-organize-imports": "^4.2.0",
+    "prettier-plugin-pkg": "^0.21.2",
+    "xo": "^1.2.1"
+  }
 }

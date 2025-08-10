@@ -4,94 +4,94 @@ author: "Maximilian Franzke"
 runs:
   using: "composite"
   steps:
-      # Install action dependencies
-      - name: Install action dependencies
-        run: |
-          cd ${{ github.action_path }}
-          pnpm install --prod
-        shell: bash
-        
-      # Ensure we have git configured for commits
-      - name: Configure git
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-        shell: bash
-        
-      # Save original state for comparison
-      - name: Save current state
-        run: |
-          git add .
-          git stash push -m "backup-before-override-removal" || true
-        shell: bash
+    # Install action dependencies
+    - name: Install action dependencies
+      run: |
+        cd ${{ github.action_path }}
+        pnpm install --prod
+      shell: bash
 
-      # Remove overrides and let pnpm audit --fix manage them
-      - name: Remove overrides and let pnpm audit manage them
-        run: |
-          node ${{ github.action_path }}/scripts/remove-overrides.js
-          pnpm install --no-frozen-lockfile
-          pnpm audit --fix || true
-        shell: bash
+    # Ensure we have git configured for commits
+    - name: Configure git
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+      shell: bash
 
-      # Check if anything changed
-      - name: Check for changes
-        id: changes
-        run: |
-          if git diff --quiet && git diff --cached --quiet; then
-            echo "has_changes=false" >> $GITHUB_OUTPUT
-            echo "No changes detected after removing overrides and running audit --fix"
-          else
-            echo "has_changes=true" >> $GITHUB_OUTPUT
-            echo "Changes detected after managing overrides and running audit --fix"
-            echo "Changed files:"
-            git diff --name-only
-            git diff --cached --name-only
-          fi
-        shell: bash
+    # Save original state for comparison
+    - name: Save current state
+      run: |
+        git add .
+        git stash push -m "backup-before-override-removal" || true
+      shell: bash
 
-      # Generate summary of changes for PR/comment
-      - name: Generate change summary
-        if: steps.changes.outputs.has_changes == 'true'
-        run: node ${{ github.action_path }}/scripts/generate-summary.js
-        shell: bash
+    # Remove overrides and let pnpm audit --fix manage them
+    - name: Remove overrides and let pnpm audit manage them
+      run: |
+        node ${{ github.action_path }}/scripts/remove-overrides.cjs
+        pnpm install --no-frozen-lockfile
+        pnpm audit --fix || true
+      shell: bash
 
-      # If on PR, post comment about changes
-      - name: Comment on PR
-        if: github.event_name == 'pull_request' && steps.changes.outputs.has_changes == 'true'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('node:fs');
-            const summary = fs.readFileSync('override-removal-summary.md', 'utf8');
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: summary
-            })
+    # Check if anything changed
+    - name: Check for changes
+      id: changes
+      run: |
+        if git diff --quiet && git diff --cached --quiet; then
+          echo "has_changes=false" >> $GITHUB_OUTPUT
+          echo "No changes detected after removing overrides and running audit --fix"
+        else
+          echo "has_changes=true" >> $GITHUB_OUTPUT
+          echo "Changes detected after managing overrides and running audit --fix"
+          echo "Changed files:"
+          git diff --name-only
+          git diff --cached --name-only
+        fi
+      shell: bash
 
-      # If on default branch and changes detected, create PR
-      - name: Create PR for override changes
-        if: steps.changes.outputs.has_changes == 'true' && github.event_name != 'pull_request'
-        uses: peter-evans/create-pull-request@v6
-        env:
-          HUSKY: 0 # Disable Husky to avoid pre-commit hooks
-        with:
-          commit-message: "chore: update pnpm overrides based on security audit"
-          title: "Update pnpm overrides based on security audit"
-          body-path: override-removal-summary.md
-          branch: update-pnpm-overrides
-          base: ${{ github.event.repository.default_branch }}
-          delete-branch: true
-          add-paths: |
-            package.json
-            pnpm-workspace.yaml
-            pnpm-lock.yaml
+    # Generate summary of changes for PR/comment
+    - name: Generate change summary
+      if: steps.changes.outputs.has_changes == 'true'
+      run: node ${{ github.action_path }}/scripts/generate-summary.cjs
+      shell: bash
 
-      # If no changes, restore original state
-      - name: Restore original state if no changes
-        if: steps.changes.outputs.has_changes == 'false'
-        run: |
-          git stash pop || true
-          echo "No changes were needed - current overrides are optimal"
-        shell: bash
+    # If on PR, post comment about changes
+    - name: Comment on PR
+      if: github.event_name == 'pull_request' && steps.changes.outputs.has_changes == 'true'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('node:fs');
+          const summary = fs.readFileSync('override-removal-summary.md', 'utf8');
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: summary
+          })
+
+    # If on default branch and changes detected, create PR
+    - name: Create PR for override changes
+      if: steps.changes.outputs.has_changes == 'true' && github.event_name != 'pull_request'
+      uses: peter-evans/create-pull-request@v6
+      env:
+        HUSKY: 0 # Disable Husky to avoid pre-commit hooks
+      with:
+        commit-message: "chore: update pnpm overrides based on security audit"
+        title: "Update pnpm overrides based on security audit"
+        body-path: override-removal-summary.md
+        branch: update-pnpm-overrides
+        base: ${{ github.event.repository.default_branch }}
+        delete-branch: true
+        add-paths: |
+          package.json
+          pnpm-workspace.yaml
+          pnpm-lock.yaml
+
+    # If no changes, restore original state
+    - name: Restore original state if no changes
+      if: steps.changes.outputs.has_changes == 'false'
+      run: |
+        git stash pop || true
+        echo "No changes were needed - current overrides are optimal"
+      shell: bash

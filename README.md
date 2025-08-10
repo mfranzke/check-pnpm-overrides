@@ -21,33 +21,33 @@ This action helps you check without manually editing files.
 name: Check pnpm Overrides
 
 on:
-  workflow_dispatch: # manual run
-  schedule:
-    - cron: "0 3 * * 0" # weekly
+    workflow_dispatch: # manual run
+    schedule:
+        - cron: "0 3 * * 0" # weekly
 
 permissions:
-  contents: write      # Required to commit changes and create branches
-  pull-requests: write # Required to create pull requests
+    contents: write # Required to commit changes and create branches
+    pull-requests: write # Required to create pull requests
 
 jobs:
-  check-overrides:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0 # needed for PR creation
+    check-overrides:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0 # needed for PR creation
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
+            - name: Install pnpm
+              uses: pnpm/action-setup@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: ".nvmrc"
-          cache: "pnpm"
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version-file: ".nvmrc"
+                  cache: "pnpm"
 
-      - uses: mfranzke/check-pnpm-overrides@main
+            - uses: mfranzke/check-pnpm-overrides@main
 ```
 
 ## Permissions
@@ -67,8 +67,8 @@ This error occurs when the workflow doesn't have the necessary permissions. Add 
 
 ```yaml
 permissions:
-  contents: write
-  pull-requests: write
+    contents: write
+    pull-requests: write
 ```
 
 ### Actions Settings
