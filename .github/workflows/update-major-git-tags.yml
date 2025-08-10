@@ -1,0 +1,38 @@
+name: Update major and minor git tags
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  update-major-and-minor-git-tag:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Needed to push tags
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Fetch full history so we can move tags
+
+      - name: Set up git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Update floating tags
+        run: |
+          VERSION="${GITHUB_REF#refs/tags/}"  # e.g. v4.2.1
+          echo "Version tag is $VERSION"
+
+          MAJOR="${VERSION%%.*}"              # v4
+          MINOR="${VERSION%.*}"               # v4.2
+
+          echo "Updating major tag $MAJOR..."
+          git tag -f "$MAJOR" "$VERSION"
+          git push origin "$MAJOR" --force
+
+          echo "Updating minor tag $MINOR..."
+          git tag -f "$MINOR" "$VERSION"
+          git push origin "$MINOR" --force

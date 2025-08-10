@@ -47,7 +47,7 @@ jobs:
                   node-version-file: ".nvmrc"
                   cache: "pnpm"
 
-            - uses: mfranzke/check-pnpm-overrides@main
+            - uses: mfranzke/check-pnpm-overrides@v0.0
 ```
 
 ## Permissions
