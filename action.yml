@@ -1,7 +1,9 @@
 name: "Check pnpm Overrides"
 description: "Manages pnpm overrides by removing unnecessary ones and adding new ones as needed based on security audits."
 author: "Maximilian Franzke"
-icon: check-circle
+branding:
+  icon: 'check-circle'
+  color: 'green'
 runs:
   using: "composite"
   steps:
