@@ -1,5 +1,5 @@
 name: "Check pnpm Overrides"
-description: "Checks whether pnpm overrides are still necessary by running audit without them."
+description: "Manages pnpm overrides by removing unnecessary ones and adding new ones as needed based on security audits."
 author: "Maximilian Franzke"
 runs:
   using: "composite"
@@ -25,8 +25,8 @@ runs:
           git stash push -m "backup-before-override-removal" || true
         shell: bash
 
-      # Remove overrides and let pnpm fix issues
-      - name: Remove overrides and fix with pnpm
+      # Remove overrides and let pnpm audit --fix manage them
+      - name: Remove overrides and let pnpm audit manage them
         run: |
           node ${{ github.action_path }}/scripts/remove-overrides.js
           pnpm install --no-frozen-lockfile
@@ -42,7 +42,7 @@ runs:
             echo "No changes detected after removing overrides and running audit --fix"
           else
             echo "has_changes=true" >> $GITHUB_OUTPUT
-            echo "Changes detected after removing overrides and running audit --fix"
+            echo "Changes detected after managing overrides and running audit --fix"
             echo "Changed files:"
             git diff --name-only
             git diff --cached --name-only
@@ -71,17 +71,18 @@ runs:
             })
 
       # If on default branch and changes detected, create PR
-      - name: Create PR for override removal
+      - name: Create PR for override changes
         if: steps.changes.outputs.has_changes == 'true' && github.event_name != 'pull_request'
         uses: peter-evans/create-pull-request@v6
         env:
           HUSKY: 0 # Disable Husky to avoid pre-commit hooks
         with:
-          commit-message: "chore: remove unnecessary pnpm overrides"
-          title: "Remove unnecessary pnpm overrides"
+          commit-message: "chore: update pnpm overrides based on security audit"
+          title: "Update pnpm overrides based on security audit"
           body-path: override-removal-summary.md
-          branch: remove-unneeded-pnpm-overrides
+          branch: update-pnpm-overrides
           base: ${{ github.event.repository.default_branch }}
+          delete-branch: true
           add-paths: |
             package.json
             pnpm-workspace.yaml
@@ -92,5 +93,5 @@ runs:
         if: steps.changes.outputs.has_changes == 'false'
         run: |
           git stash pop || true
-          echo "No changes were needed - overrides are still necessary"
+          echo "No changes were needed - current overrides are optimal"
         shell: bash

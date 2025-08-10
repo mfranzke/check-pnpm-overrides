@@ -24,17 +24,18 @@ function extractPackageName(overrideKey) {
   return overrideKey;
 }
 
-// Generate markdown summary of override removal
+// Generate markdown summary of override changes
 function generateSummary() {
-  let summary = "# pnpm Overrides Removal Summary\n\n";
-  summary += "The following changes occurred after removing pnpm overrides and running `pnpm audit --fix`:\n\n";
+  let summary = "# pnpm Overrides Management Summary\n\n";
+  summary += "The following changes occurred after managing pnpm overrides and running `pnpm audit --fix`:\n\n";
   
   // Add removed overrides section if the file exists
   if (fs.existsSync('removed-overrides.json')) {
     const removed = JSON.parse(fs.readFileSync('removed-overrides.json', 'utf8'));
     
     if (Object.keys(removed.packageJson).length > 0 || Object.keys(removed.workspace).length > 0) {
-      summary += "## Removed Overrides\n\n";
+      summary += "## Previously Removed Overrides\n\n";
+      summary += "These overrides were temporarily removed to test if they're still necessary:\n\n";
       
       const sections = [
         { title: 'From package.json:', data: removed.packageJson },
