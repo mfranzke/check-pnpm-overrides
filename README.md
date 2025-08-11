@@ -59,6 +59,9 @@ jobs:
             - uses: mfranzke/check-pnpm-overrides@v0.0
 ```
 
+> [!IMPORTANT]
+> This action can only create a pull request if the _Allow GitHub Actions to create and approve pull requests_ option is enabled in your repositories _Settings > Actions > General_.
+
 ## Permissions
 
 This action requires the following permissions to function properly:
@@ -79,8 +82,3 @@ permissions:
     contents: write
     pull-requests: write
 ```
-
-### Actions Settings
-
-Additionally check for the repositories settings within actions / general (`/settings/actions`):
-The setting "Allow GitHub Actions to create and approve pull requests" must be activated.
