@@ -52,11 +52,16 @@ jobs:
         continue-on-error: true
 
       - name: Verify action ran
+        env:
+          GIT_PAGER: cat
         run: |
-          echo "Action completed with exit code: ${{ steps.test-action.outcome }}"
+          set -o errexit -o nounset -o pipefail
+          echo "Action outcome: ${{ steps.test-action.outcome }}"
           if [ -f override-removal-summary.md ]; then
-            echo "Action produced summary:"
-            cat override-removal-summary.md
+            echo "Action produced summary (first 200 lines):"
+            head --lines=200 override-removal-summary.md
+          else
+            echo "No summary file produced."
           fi
           echo "Git status after action:"
-          git status --porcelain || true
+          git --no-pager status --porcelain || true
