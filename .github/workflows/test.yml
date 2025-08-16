@@ -52,16 +52,12 @@ jobs:
         continue-on-error: true
 
       - name: Verify action ran
-        env:
-          GIT_PAGER: cat
+        timeout-minutes: 2
         run: |
-          set -o errexit -o nounset -o pipefail
-          echo "Action outcome: ${{ steps.test-action.outcome }}"
+          echo "Action completed with exit code: ${{ steps.test-action.outcome }}"
           if [ -f override-removal-summary.md ]; then
-            echo "Action produced summary (first 200 lines):"
-            head -n 200 override-removal-summary.md
-          else
-            echo "No summary file produced."
+            echo "Action produced summary (first 100 lines):"
+            head -n 100 override-removal-summary.md
           fi
           echo "Git status after action:"
-          git --no-pager status --porcelain || true
+          timeout 30 git --no-pager status --porcelain || echo "Git status command timed out"
