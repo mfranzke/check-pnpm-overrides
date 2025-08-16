@@ -59,7 +59,7 @@ jobs:
           echo "Action outcome: ${{ steps.test-action.outcome }}"
           if [ -f override-removal-summary.md ]; then
             echo "Action produced summary (first 200 lines):"
-            head --lines=200 override-removal-summary.md
+            head -n 200 override-removal-summary.md
           else
             echo "No summary file produced."
           fi
