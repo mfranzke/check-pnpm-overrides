@@ -1,5 +1,6 @@
 {
 	"*.md": "markdownlint --config .config/.markdown-lint.yml --fix",
 	"*.{js,ts,tsx,jsx,mjs,cjs}": "xo --fix",
-	"pnpm-lock.yaml": "pnpm audit --fix"
+	"pnpm-lock.yaml": "pnpm audit --fix",
+	"package.json": "pnpm install"
 }
