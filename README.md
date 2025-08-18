@@ -14,6 +14,7 @@ SPDX-License-Identifier: MIT
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
 [![Open Source Love](https://badges.frapsoft.com/os/v3/open-source.svg?v=103)](https://github.com/ellerbrock/open-source-badges/)
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.0-4baaaa.svg)](CODE-OF-CONDUCT.md)
+[![REUSE status](https://api.reuse.software/badge/github.com/mfranzke/check-pnpm-overrides)](https://api.reuse.software/info/github.com/mfranzke/check-pnpm-overrides)
 
 This GitHub Action helps you determine if your `pnpm` overrides in `package.json` are still necessary.
 It works by temporarily removing the `overrides` section, reinstalling dependencies, and running `pnpm audit`.
