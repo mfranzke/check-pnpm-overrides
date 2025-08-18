@@ -1,2 +1,6 @@
+# SPDX-FileCopyrightText: 2025 Maximilian Franzke <mfr@nzke.net>
+#
+# SPDX-License-Identifier: MIT
+
 overrides:
   "@eslint/plugin-kit@<0.3.4": ">=0.3.4"

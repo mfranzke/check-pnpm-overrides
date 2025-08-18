@@ -1,5 +1,9 @@
 #!/usr/bin/env node
 
+// SPDX-FileCopyrightText: 2025 Maximilian Franzke <mfr@nzke.net>
+//
+// SPDX-License-Identifier: MIT
+
 const process = require('node:process');
 
 // Test the package name extraction logic

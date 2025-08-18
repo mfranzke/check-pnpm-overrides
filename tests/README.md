@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2025 Maximilian Franzke <mfr@nzke.net>
+
+SPDX-License-Identifier: MIT
+-->
+
 # Tests for check-pnpm-overrides Action
 
 This directory contains comprehensive tests for the GitHub Action.
