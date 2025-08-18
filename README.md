@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2025 Maximilian Franzke <mfr@nzke.net>
+
+SPDX-License-Identifier: MIT
+-->
+
 # Check pnpm Overrides GitHub Action
 
 [![MIT license](https://img.shields.io/github/license/mfranzke/check-pnpm-overrides "license MIT badge")](https://opensource.org/licenses/mit-license.php)

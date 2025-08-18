@@ -1,9 +1,13 @@
+# SPDX-FileCopyrightText: 2025 Maximilian Franzke <mfr@nzke.net>
+#
+# SPDX-License-Identifier: MIT
+
 name: "Check pnpm Overrides"
 description: "Manages pnpm overrides by removing unnecessary ones and adding new ones as needed based on security audits."
 author: "Maximilian Franzke"
 branding:
-  icon: 'check-circle'
-  color: 'green'
+  icon: "check-circle"
+  color: "green"
 runs:
   using: "composite"
   steps:

@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2025 Maximilian Franzke <mfr@nzke.net>
+
+SPDX-License-Identifier: MIT
+-->
+
 # Contributing
 
 **Thank you for your interest in our project.** Contributions are always welcome. **Feel free to [open an issue](https://github.com/mfranzke/css-if-polyfill/issues/new) if you have any questions, ideas, or bugs to report, or submit pull requests to contribute code.**

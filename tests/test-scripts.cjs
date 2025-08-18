@@ -1,5 +1,9 @@
 #!/usr/bin/env node
 
+// SPDX-FileCopyrightText: 2025 Maximilian Franzke <mfr@nzke.net>
+//
+// SPDX-License-Identifier: MIT
+
 const fs = require('node:fs');
 const path = require('node:path');
 const { execSync } = require('node:child_process');

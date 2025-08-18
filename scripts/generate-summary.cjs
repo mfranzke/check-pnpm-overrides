@@ -1,5 +1,9 @@
 #!/usr/bin/env node
 
+// SPDX-FileCopyrightText: 2025 Maximilian Franzke <mfr@nzke.net>
+//
+// SPDX-License-Identifier: MIT
+
 const fs = require('node:fs');
 
 // Extract package name from override key, handling scoped packages and version specifiers
