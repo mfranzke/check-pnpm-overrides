@@ -15,7 +15,7 @@
     "test:scripts": "node tests/test-scripts.cjs"
   },
   "dependencies": {
-    "@commitlint/cli": "^19.8.1",
+    "@commitlint/cli": "^20.0.0",
     "@commitlint/config-conventional": "^19.8.1",
     "husky": "^9.1.7",
     "js-yaml": "^4.1.0",
