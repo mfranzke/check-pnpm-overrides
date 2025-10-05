@@ -25,5 +25,8 @@
     "prettier-plugin-organize-imports": "^4.2.0",
     "prettier-plugin-pkg": "^0.21.2",
     "xo": "^1.2.2"
+  },
+  "engines": {
+    "node": ">= 24"
   }
 }
