@@ -56,11 +56,12 @@ jobs:
         continue-on-error: true
 
       - name: Verify action ran
+        timeout-minutes: 2
         run: |
           echo "Action completed with exit code: ${{ steps.test-action.outcome }}"
           if [ -f override-removal-summary.md ]; then
-            echo "Action produced summary:"
-            cat override-removal-summary.md
+            echo "Action produced summary (first 100 lines):"
+            head -n 100 override-removal-summary.md
           fi
           echo "Git status after action:"
-          git status --porcelain || true
+          timeout 30 git --no-pager status --porcelain || echo "Git status command timed out"
