@@ -81,7 +81,7 @@ runs:
     # If on default branch and changes detected, create PR
     - name: Create PR for override changes
       if: steps.changes.outputs.has_changes == 'true' && github.event_name != 'pull_request'
-      uses: peter-evans/create-pull-request@v6
+      uses: peter-evans/create-pull-request@v7
       env:
         HUSKY: 0 # Disable Husky to avoid pre-commit hooks
       with:
