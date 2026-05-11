@@ -8,29 +8,11 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { execSync } = require('node:child_process');
 const process = require('node:process');
-
-// Test utilities
-function assertEquals(actual, expected, message) {
-	if (JSON.stringify(actual) !== JSON.stringify(expected)) {
-		throw new Error(
-			`${message}\nExpected: ${JSON.stringify(expected)}\nActual: ${JSON.stringify(actual)}`
-		);
-	}
-
-	console.log(`✓ ${message}`);
-}
+const yaml = require('js-yaml');
 
 function assertTrue(condition, message) {
 	if (!condition) {
 		throw new Error(`${message}\nExpected: true\nActual: false`);
-	}
-
-	console.log(`✓ ${message}`);
-}
-
-function _assertFalse(condition, message) {
-	if (condition) {
-		throw new Error(`${message}\nExpected: false\nActual: true`);
 	}
 
 	console.log(`✓ ${message}`);
@@ -63,45 +45,7 @@ function testRemoveOverridesScript() {
 
 	setupTemporaryDir();
 
-	// Test 1: Remove overrides from package.json with overrides
-	fs.copyFileSync(
-		path.join(fixturesDir, 'package-with-overrides.json'),
-		'package.json'
-	);
-
-	execSync(`node ${path.join(scriptsDir, 'remove-overrides.cjs')}`);
-
-	const result = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-	assertTrue(
-		!Object.hasOwn(result, 'overrides'),
-		'Should remove overrides property from package.json'
-	);
-	assertEquals(
-		result.name,
-		'test-project',
-		'Should preserve other properties'
-	);
-
-	// Test 2: Handle package.json without overrides gracefully
-	fs.copyFileSync(
-		path.join(fixturesDir, 'package-without-overrides.json'),
-		'package.json'
-	);
-
-	execSync(`node ${path.join(scriptsDir, 'remove-overrides.cjs')}`);
-
-	const result2 = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-	assertTrue(
-		!Object.hasOwn(result2, 'overrides'),
-		'Should handle missing overrides gracefully'
-	);
-	assertEquals(
-		result2.name,
-		'test-project',
-		'Should preserve other properties'
-	);
-
-	// Test 3: Remove overrides from pnpm-workspace.yaml with overrides
+	// Test 1: Remove overrides and minimumReleaseAgeExclude from pnpm-workspace.yaml
 	fs.copyFileSync(
 		path.join(fixturesDir, 'package-without-overrides.json'),
 		'package.json'
@@ -114,18 +58,38 @@ function testRemoveOverridesScript() {
 	execSync(`node ${path.join(scriptsDir, 'remove-overrides.cjs')}`);
 
 	const workspaceContent = fs.readFileSync('pnpm-workspace.yaml', 'utf8');
-	const yaml = require('js-yaml');
 	const workspace = yaml.load(workspaceContent);
 	assertTrue(
 		!Object.hasOwn(workspace, 'overrides'),
 		'Should remove overrides property from pnpm-workspace.yaml'
 	);
 	assertTrue(
+		!Object.hasOwn(workspace, 'minimumReleaseAgeExclude'),
+		'Should remove minimumReleaseAgeExclude from pnpm-workspace.yaml'
+	);
+	assertTrue(
 		Array.isArray(workspace.packages),
 		'Should preserve packages array'
 	);
+	assertTrue(
+		fs.existsSync('removed-overrides.json'),
+		'Should write removed-overrides.json when entries are removed'
+	);
 
-	// Test 4: Handle pnpm-workspace.yaml without overrides
+	const removedEntries = JSON.parse(
+		fs.readFileSync('removed-overrides.json', 'utf8')
+	);
+	assertTrue(
+		Object.keys(removedEntries.workspace.overrides).length > 0,
+		'Should store removed workspace overrides'
+	);
+	assertTrue(
+		removedEntries.workspace.minimumReleaseAgeExclude.length > 0,
+		'Should store removed minimumReleaseAgeExclude entries'
+	);
+
+	// Test 2: Handle pnpm-workspace.yaml without overrides
+	fs.rmSync('removed-overrides.json', { force: true });
 	fs.copyFileSync(
 		path.join(fixturesDir, 'pnpm-workspace-without-overrides.yaml'),
 		'pnpm-workspace.yaml'
@@ -143,30 +107,9 @@ function testRemoveOverridesScript() {
 		Array.isArray(workspace2.packages),
 		'Should preserve packages array'
 	);
-
-	// Test 5: Handle both files with overrides
-	fs.copyFileSync(
-		path.join(fixturesDir, 'package-with-overrides.json'),
-		'package.json'
-	);
-	fs.copyFileSync(
-		path.join(fixturesDir, 'pnpm-workspace-with-overrides.yaml'),
-		'pnpm-workspace.yaml'
-	);
-
-	execSync(`node ${path.join(scriptsDir, 'remove-overrides.cjs')}`);
-
-	const result5 = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-	const workspaceContent5 = fs.readFileSync('pnpm-workspace.yaml', 'utf8');
-	const workspace5 = yaml.load(workspaceContent5);
-
 	assertTrue(
-		!Object.hasOwn(result5, 'overrides'),
-		'Should remove overrides from both package.json'
-	);
-	assertTrue(
-		!Object.hasOwn(workspace5, 'overrides'),
-		'Should remove overrides from both pnpm-workspace.yaml'
+		!fs.existsSync('removed-overrides.json'),
+		'Should not write removed-overrides.json when nothing is removed'
 	);
 
 	cleanupTemporaryDir();
@@ -186,14 +129,16 @@ function testGenerateSummaryScript() {
 	fs.writeFileSync(
 		'removed-overrides.json',
 		JSON.stringify({
-			packageJson: {
-				lodash: '^4.17.21',
-				'@types/node': '^18.0.0',
-				'@babel/core@7.20.0': '^7.21.0'
-			},
 			workspace: {
-				react: '^18.0.0',
-				'@vue/cli': '^5.0.0'
+				overrides: {
+					lodash: '^4.17.21',
+					'@types/node': '^18.0.0',
+					'@babel/core@7.20.0': '^7.21.0'
+				},
+				minimumReleaseAgeExclude: [
+					'GHSA-35jh-r3h4-6jhm',
+					'GHSA-67mh-4wv8-2f99'
+				]
 			}
 		})
 	);
@@ -228,12 +173,14 @@ function testGenerateSummaryScript() {
 		'Should have removed overrides section'
 	);
 	assertTrue(
-		summaryContent.includes('### From package.json:'),
-		'Should list package.json overrides'
+		summaryContent.includes('### Overrides from pnpm-workspace.yaml'),
+		'Should list workspace overrides'
 	);
 	assertTrue(
-		summaryContent.includes('### From pnpm-workspace.yaml:'),
-		'Should list workspace overrides'
+		summaryContent.includes(
+			'### minimumReleaseAgeExclude from pnpm-workspace.yaml'
+		),
+		'Should list minimumReleaseAgeExclude entries'
 	);
 	assertTrue(
 		summaryContent.includes('lodash'),
@@ -248,12 +195,8 @@ function testGenerateSummaryScript() {
 		'Should mention @babel/core override'
 	);
 	assertTrue(
-		summaryContent.includes('react'),
-		'Should mention react override'
-	);
-	assertTrue(
-		summaryContent.includes('@vue/cli'),
-		'Should mention @vue/cli override'
+		summaryContent.includes('GHSA-35jh-r3h4-6jhm'),
+		'Should mention minimumReleaseAgeExclude GHSA entries'
 	);
 	assertTrue(
 		summaryContent.includes('https://npmjs.com/package/lodash'),
@@ -271,6 +214,10 @@ function testGenerateSummaryScript() {
 		summaryContent.includes('## Summary'),
 		'Should have summary section'
 	);
+	assertTrue(
+		summaryContent.includes('pnpm audit --fix=override'),
+		'Should mention pnpm audit --fix=override'
+	);
 
 	cleanupTemporaryDir();
 }
@@ -287,8 +234,12 @@ function testIntegration() {
 
 	// Test full workflow
 	fs.copyFileSync(
-		path.join(fixturesDir, 'package-with-overrides.json'),
+		path.join(fixturesDir, 'package-without-overrides.json'),
 		'package.json'
+	);
+	fs.copyFileSync(
+		path.join(fixturesDir, 'pnpm-workspace-with-overrides.yaml'),
+		'pnpm-workspace.yaml'
 	);
 
 	// Add initial commit
@@ -298,17 +249,22 @@ function testIntegration() {
 	// Run remove overrides script
 	execSync(`node ${path.join(scriptsDir, 'remove-overrides.cjs')}`);
 
-	const finalPackage = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+	const workspaceContent = fs.readFileSync('pnpm-workspace.yaml', 'utf8');
+	const finalWorkspace = yaml.load(workspaceContent);
 	assertTrue(
-		!Object.hasOwn(finalPackage, 'overrides'),
-		'Integration: Should successfully remove overrides'
+		!Object.hasOwn(finalWorkspace, 'overrides'),
+		'Integration: Should successfully remove workspace overrides'
+	);
+	assertTrue(
+		!Object.hasOwn(finalWorkspace, 'minimumReleaseAgeExclude'),
+		'Integration: Should successfully clear minimumReleaseAgeExclude'
 	);
 
 	// Check if git detects changes
 	const gitStatus = execSync('git status --porcelain').toString();
 	assertTrue(
-		gitStatus.includes('package.json'),
-		'Integration: Git should detect changes to package.json'
+		gitStatus.includes('pnpm-workspace.yaml'),
+		'Integration: Git should detect changes to pnpm-workspace.yaml'
 	);
 
 	cleanupTemporaryDir();

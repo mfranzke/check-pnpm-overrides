@@ -7,3 +7,6 @@ packages:
 overrides:
   lodash: "^4.17.21"
   axios: "^1.0.0"
+minimumReleaseAgeExclude:
+  - GHSA-35jh-r3h4-6jhm
+  - GHSA-67mh-4wv8-2f99

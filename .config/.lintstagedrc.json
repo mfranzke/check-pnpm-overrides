@@ -1,6 +1,6 @@
 {
 	"*.md": "markdownlint --config .config/.markdown-lint.yml --fix",
 	"*.{js,ts,tsx,jsx,mjs,cjs}": "xo --fix",
-	"pnpm-lock.yaml": "pnpm audit --fix",
-	"package.json": "pnpm install --lockfile-only --ignore-scripts"
+	"pnpm-lock.yaml": "sh -c 'pnpm audit --fix=override'",
+	"package.json": "sh -c 'pnpm install --lockfile-only --ignore-scripts'"
 }

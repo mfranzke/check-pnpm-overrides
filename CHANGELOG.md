@@ -18,3 +18,15 @@ And the commit messages from [Conventional Commits](https://conventionalcommits.
 ### Patch Changes
 
 - First version
+
+## 1.0.0
+
+### Breaking Changes
+
+- Switch audit execution to `pnpm audit --fix=override` for pnpm v11 compatibility
+- Manage overrides exclusively in `pnpm-workspace.yaml` (instead of `package.json`)
+- Clear `minimumReleaseAgeExclude` in `pnpm-workspace.yaml` before running audit fix
+
+### Changed
+
+- Updated action summary output and workflow test setup for pnpm v11 behavior
