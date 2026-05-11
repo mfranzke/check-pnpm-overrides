@@ -41,7 +41,7 @@ pnpm run test:dev help        # Show available options
 
 ### Script Tests (`test-scripts.cjs`)
 
-- ✅ `remove-overrides.cjs` functionality for both package.json and pnpm-workspace.yaml
+- ✅ `remove-overrides.cjs` functionality for pnpm-workspace.yaml entries
 - ✅ `generate-summary.cjs` functionality for creating detailed PR summaries
 - ✅ Integration workflow testing with git change detection
 - ✅ Error handling scenarios
@@ -57,8 +57,8 @@ pnpm run test:dev help        # Show available options
 
 ### Fixtures
 
-- `package-with-overrides.json` - Sample package.json with overrides
-- `package-without-overrides.json` - Sample package.json without overrides
+- `pnpm-workspace-with-overrides.yaml` - Sample pnpm workspace config with overrides
+- `pnpm-workspace-without-overrides.yaml` - Sample pnpm workspace config without overrides
 - `audit-with-vulnerabilities.json` - Sample audit with security issues
 - `audit-clean.json` - Sample clean audit results
 

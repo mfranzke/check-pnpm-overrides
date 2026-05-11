@@ -8,22 +8,13 @@ const fs = require('node:fs');
 const yaml = require('js-yaml');
 
 const removedOverrides = {
-	packageJson: {},
-	workspace: {}
+	workspace: {
+		overrides: {},
+		minimumReleaseAgeExclude: []
+	}
 };
 
-// Handle package.json overrides
-const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-let packageJsonModified = false;
-
-if (pkg.overrides) {
-	removedOverrides.packageJson = { ...pkg.overrides };
-	delete pkg.overrides;
-	fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));
-	packageJsonModified = true;
-}
-
-// Handle pnpm-workspace.yaml overrides
+// Handle pnpm-workspace.yaml overrides and minimumReleaseAgeExclude
 let workspaceModified = false;
 const workspaceFile = 'pnpm-workspace.yaml';
 
@@ -33,10 +24,25 @@ if (fs.existsSync(workspaceFile)) {
 		const workspace = yaml.load(workspaceContent);
 
 		if (workspace && workspace.overrides) {
-			removedOverrides.workspace = { ...workspace.overrides };
+			removedOverrides.workspace.overrides = { ...workspace.overrides };
 			delete workspace.overrides;
-			fs.writeFileSync(workspaceFile, yaml.dump(workspace));
 			workspaceModified = true;
+		}
+
+		if (
+			workspace &&
+			Array.isArray(workspace.minimumReleaseAgeExclude) &&
+			workspace.minimumReleaseAgeExclude.length > 0
+		) {
+			removedOverrides.workspace.minimumReleaseAgeExclude = [
+				...workspace.minimumReleaseAgeExclude
+			];
+			delete workspace.minimumReleaseAgeExclude;
+			workspaceModified = true;
+		}
+
+		if (workspaceModified) {
+			fs.writeFileSync(workspaceFile, yaml.dump(workspace));
 		}
 	} catch (error) {
 		console.warn(
@@ -47,20 +53,24 @@ if (fs.existsSync(workspaceFile)) {
 }
 
 // Output results for consumption by the GitHub Action
-if (packageJsonModified || workspaceModified) {
+if (workspaceModified) {
 	// Write removed overrides to a file for the action to read
 	fs.writeFileSync(
 		'removed-overrides.json',
 		JSON.stringify(removedOverrides, null, 2)
 	);
 
-	if (packageJsonModified) {
-		console.log('Removed overrides from package.json');
-	}
-
-	if (workspaceModified) {
+	if (Object.keys(removedOverrides.workspace.overrides).length > 0) {
 		console.log('Removed overrides from pnpm-workspace.yaml');
 	}
+
+	if (removedOverrides.workspace.minimumReleaseAgeExclude.length > 0) {
+		console.log(
+			'Cleared minimumReleaseAgeExclude from pnpm-workspace.yaml'
+		);
+	}
 } else {
-	console.log('No overrides found in package.json or pnpm-workspace.yaml');
+	console.log(
+		'No overrides or minimumReleaseAgeExclude found in pnpm-workspace.yaml'
+	);
 }

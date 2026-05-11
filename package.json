@@ -6,7 +6,7 @@
   "author": "Maximilian Franzke",
   "license": "MIT",
   "private": true,
-  "packageManager": "pnpm@10.14.0",
+  "packageManager": "pnpm@11.0.0",
   "scripts": {
     "prepare": "husky",
     "test": "node tests/run-tests.cjs",
