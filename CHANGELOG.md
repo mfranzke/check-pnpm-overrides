@@ -23,7 +23,7 @@ And the commit messages from [Conventional Commits](https://conventionalcommits.
 
 ### Breaking Changes
 
-- Switch audit execution to `pnpm audit --fix=override` for pnpm v11 compatibility
+- Switch audit execution to `pnpm audit --fix=override` for **pnpm v11** compatibility
 - Manage overrides exclusively in `pnpm-workspace.yaml` (instead of `package.json`)
 - Clear `minimumReleaseAgeExclude` in `pnpm-workspace.yaml` before running audit fix
 
