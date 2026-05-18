@@ -32,23 +32,31 @@ jobs:
       - name: Run tests
         run: pnpm test
 
-      - name: Create test project with overrides
+      - name: Create test project with workspace overrides
         env:
           HUSKY: 0 # Disable Husky to avoid pre-commit hooks
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          # Add lodash dependency and override to existing package.json
+          # Add lodash dependency to package.json
           node -e "
             const fs = require('node:fs');
             const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
             pkg.dependencies = pkg.dependencies || {};
             pkg.dependencies.lodash = '^4.17.20';
-            pkg.overrides = { lodash: '^4.17.21' };
             fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));
           "
-          git add package.json
-          git commit -m "Add test project with overrides"
+          # Add overrides and minimumReleaseAgeExclude to pnpm-workspace.yaml
+          node -e "
+            const fs = require('node:fs');
+            const yaml = require('js-yaml');
+            const workspace = yaml.load(fs.readFileSync('pnpm-workspace.yaml', 'utf8')) || {};
+            workspace.overrides = { lodash: '^4.17.21' };
+            workspace.minimumReleaseAgeExclude = ['GHSA-35jh-r3h4-6jhm'];
+            fs.writeFileSync('pnpm-workspace.yaml', yaml.dump(workspace));
+          "
+          git add package.json pnpm-workspace.yaml
+          git commit -m "Add test project with pnpm workspace overrides"
 
       - name: Test action locally
         id: test-action

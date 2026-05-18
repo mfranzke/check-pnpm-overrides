@@ -16,12 +16,12 @@ SPDX-License-Identifier: MIT
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.0-4baaaa.svg)](CODE-OF-CONDUCT.md)
 [![REUSE status](https://api.reuse.software/badge/github.com/mfranzke/check-pnpm-overrides)](https://api.reuse.software/info/github.com/mfranzke/check-pnpm-overrides)
 
-This GitHub Action helps you determine if your `pnpm` overrides in `package.json` are still necessary.
-It works by temporarily removing the `overrides` section, reinstalling dependencies, and running `pnpm audit`.
+This GitHub Action helps you determine if your `pnpm` overrides in `pnpm-workspace.yaml` are still necessary.
+It works by temporarily removing the `overrides` section (and clearing `minimumReleaseAgeExclude`), reinstalling dependencies, and running `pnpm audit --fix=override`.
 
 ## Why?
 
-Sometimes, `pnpm audit --fix` adds overrides to `package.json` to patch vulnerabilities.
+Sometimes, `pnpm audit --fix=override` adds overrides to `pnpm-workspace.yaml` to patch vulnerabilities.
 Over time, these fixes may become unnecessary as upstream dependencies patch the issues.
 This action helps you check without manually editing files.
 
@@ -32,6 +32,9 @@ This action helps you check without manually editing files.
 - Outputs audit results for comparison
 
 ## Usage
+
+> [!IMPORTANT]
+> This action targets pnpm v11 behavior and requires Node.js 22+.
 
 ```yaml
 name: Check pnpm Overrides
@@ -63,7 +66,7 @@ jobs:
                   node-version-file: ".nvmrc"
                   cache: "pnpm"
 
-            - uses: mfranzke/check-pnpm-overrides@v0.0
+            - uses: mfranzke/check-pnpm-overrides@v1
 ```
 
 > [!IMPORTANT]

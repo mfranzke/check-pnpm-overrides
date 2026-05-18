@@ -32,12 +32,12 @@ runs:
         git stash push -m "backup-before-override-removal" || true
       shell: bash
 
-    # Remove overrides and let pnpm audit --fix manage them
+    # Remove overrides and minimumReleaseAgeExclude and let pnpm audit --fix=override manage them
     - name: Remove overrides and let pnpm audit manage them
       run: |
         node ${{ github.action_path }}/scripts/remove-overrides.cjs
         pnpm install --no-frozen-lockfile
-        pnpm audit --fix || true
+        pnpm audit --fix=override || true
         pnpm install --no-frozen-lockfile
       shell: bash
 
@@ -47,10 +47,10 @@ runs:
       run: |
         if git diff --quiet && git diff --cached --quiet; then
           echo "has_changes=false" >> $GITHUB_OUTPUT
-          echo "No changes detected after removing overrides and running audit --fix"
+          echo "No changes detected after removing overrides and running audit --fix=override"
         else
           echo "has_changes=true" >> $GITHUB_OUTPUT
-          echo "Changes detected after managing overrides and running audit --fix"
+          echo "Changes detected after managing overrides and running audit --fix=override"
           echo "Changed files:"
           git diff --name-only
           git diff --cached --name-only
@@ -92,7 +92,6 @@ runs:
         base: ${{ github.event.repository.default_branch }}
         delete-branch: true
         add-paths: |
-          package.json
           pnpm-workspace.yaml
           pnpm-lock.yaml
 

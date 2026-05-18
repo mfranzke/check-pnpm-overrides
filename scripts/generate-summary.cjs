@@ -34,7 +34,7 @@ function extractPackageName(overrideKey) {
 function generateSummary() {
 	let summary = '# pnpm Overrides Management Summary\n\n';
 	summary +=
-		'The following changes occurred after managing pnpm overrides and running `pnpm audit --fix`:\n\n';
+		'The following changes occurred after managing pnpm overrides and running `pnpm audit --fix=override`:\n\n';
 
 	// Add removed overrides section if the file exists
 	if (fs.existsSync('removed-overrides.json')) {
@@ -43,27 +43,35 @@ function generateSummary() {
 		);
 
 		if (
-			Object.keys(removed.packageJson).length > 0 ||
-			Object.keys(removed.workspace).length > 0
+			Object.keys(removed.workspace.overrides || {}).length > 0 ||
+			(removed.workspace.minimumReleaseAgeExclude || []).length > 0
 		) {
 			summary += '## Previously Removed Overrides\n\n';
 			summary +=
-				"These overrides were temporarily removed to test if they're still necessary:\n\n";
+				'These entries were temporarily removed to test if they are still necessary:\n\n';
 
-			const sections = [
-				{ title: 'From package.json:', data: removed.packageJson },
-				{ title: 'From pnpm-workspace.yaml:', data: removed.workspace }
-			];
-
-			for (const { title, data } of sections) {
-				if (Object.keys(data).length > 0) {
-					summary += `### ${title}\n\n`;
-					for (const [pkg, version] of Object.entries(data)) {
-						summary += `- [\`${pkg}\`](https://npmjs.com/package/${encodeURIComponent(extractPackageName(pkg))}): \`${version}\`\n`;
-					}
-
-					summary += '\n';
+			const workspaceOverrides = removed.workspace.overrides || {};
+			if (Object.keys(workspaceOverrides).length > 0) {
+				summary += '### Overrides from pnpm-workspace.yaml\n\n';
+				for (const [pkg, version] of Object.entries(
+					workspaceOverrides
+				)) {
+					summary += `- [\`${pkg}\`](https://npmjs.com/package/${encodeURIComponent(extractPackageName(pkg))}): \`${version}\`\n`;
 				}
+
+				summary += '\n';
+			}
+
+			const minimumReleaseAgeExclude =
+				removed.workspace.minimumReleaseAgeExclude || [];
+			if (minimumReleaseAgeExclude.length > 0) {
+				summary +=
+					'### minimumReleaseAgeExclude from pnpm-workspace.yaml\n\n';
+				for (const advisory of minimumReleaseAgeExclude) {
+					summary += `- \`${advisory}\`\n`;
+				}
+
+				summary += '\n';
 			}
 		}
 	}
@@ -91,9 +99,10 @@ function generateSummary() {
 	}
 
 	summary += '\n## Summary\n\n';
-	summary += '- Removed overrides from configuration files\n';
+	summary += '- Removed overrides from pnpm-workspace.yaml\n';
+	summary += '- Cleared `minimumReleaseAgeExclude` before auditing\n';
 	summary += '- Ran `pnpm install` to update lockfile\n';
-	summary += '- Ran `pnpm audit --fix` to apply available fixes\n\n';
+	summary += '- Ran `pnpm audit --fix=override` to apply available fixes\n\n';
 	summary +=
 		'This suggests that the overrides are no longer necessary as pnpm can now resolve dependencies and fix vulnerabilities without them.\n';
 
